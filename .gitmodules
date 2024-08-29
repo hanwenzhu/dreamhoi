@@ -1,0 +1,6 @@
+[submodule "src/MVDream-threestudio"]
+	path = src/MVDream-threestudio
+	url = https://github.com/hanwenzhu/MVDream-threestudio.git
+[submodule "src/MultiviewSMPLifyX"]
+	path = src/MultiviewSMPLifyX
+	url = https://github.com/hanwenzhu/MultiviewSMPLifyX.git
