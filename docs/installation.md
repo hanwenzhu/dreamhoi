@@ -77,9 +77,9 @@ huggingface-cli login
 Note that the directory `src/MVDream-threestudio/.threestudio_cache` will be used for caching model weights, which can take 2GB.
 
 ### Download SMPL models
-Parts of our code uses [SMPL](https://smpl.is.tue.mpg.de) and its derivatives. Our paper presents results on the SMPL+H (SMPL with hands) models, although you may also use plain SMPL models for our pipeline. We download these models (following their [instructions](https://github.com/vchoutas/smplx/blob/main/README.md)). You can choose to download one (or all) of the gendered SMPL models below.
+Parts of our code uses [SMPL](https://smpl.is.tue.mpg.de) and its derivatives. Our paper presents results on the SMPL+H models, although you may also use plain SMPL models for our pipeline. We download these models (following their [instructions](https://github.com/vchoutas/smplx/blob/main/README.md)). You can choose to download one (or all) of the gendered SMPL models below.
 
-##### Download (plain) SMPL models
+##### Download SMPL models
 From the “Downloads” page of [SMPL](https://smpl.is.tue.mpg.de) download “version 1.0.0 for Python 2.7” for male and female models. In order to download, you need to first log in and accept the license. The gender-neutral model is at [SMPLify](https://smplify.is.tue.mpg.de/download.php) “Downloads” page, inside `smplify_code_v2.zip`. (Again you would need to log in and accept terms.) You can use any one of the genders for our pipeline.
 
 Follow [these instructions](https://github.com/vchoutas/smplx/tree/main/tools#removing-chumpy-objects) to prepare the `.pkl` models (it changes chumpy arrays to numpy arrays). The script runs in Python 2 (or you can edit manually to make it run in Python 3). Renaming the `.pkl` files appropriately, in the end there should be `SMPL_FEMALE.pkl`, `SMPL_MALE.pkl`, and/or `SMPL_NEUTRAL.pkl`.
@@ -119,7 +119,7 @@ pip install configargparse configer torchgeometry==0.1.2
 ### Install OpenPose
 Follow OpenPose's [instructions](https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/installation/0_index.md) to install [OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose) at some location on your system. Make sure that all models, including the face and hands models are downloaded (see [here](https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/installation/1_prerequisites.md#general-tips)). Note that the venv and conda environment may need to be deactivated during installation.
 
-*OpenPose is difficult to install on headless servers without sudo rights, so it may need different environment flags during run-time, or it may need to be installed on a separate system or Docker. Depending on your case, you may want to modify `TODO` in `dreamhoi/TODO.py` to reflect your settings.*
+*OpenPose is difficult to install on headless servers without sudo rights, so it may need different environment flags during run-time, or it may need to be installed on a separate system or Docker. Depending on your case, you may want to modify `run_openpose` in `dreamhoi/main.py` to reflect your settings.*
 
 ## Questions
 Please raise any issues encountered to the respective dependencies or [to us](https://github.com/hanwenzhu/dreamhoi/issues/new).
