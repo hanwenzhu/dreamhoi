@@ -30,8 +30,8 @@ python main.py \
   --checkpoint_interval 1000 \
   --use_wandb \
   --smpl_variant smplh \
-  --openpose_path /path/to/openpose/build/examples/openpose/openpose.bin \
-  --openpose_cwd /path/to/openpose
+  --openpose_dir /path/to/openpose \
+  --openpose_bin /path/to/openpose/build/examples/openpose/openpose.bin
 ```
 where:
 * `num_iterations` is the number of times to reinitiate NeRF
