@@ -230,7 +230,7 @@ if __name__ == "__main__":
         num_iterations=args.num_iterations, tag=args.tag, prompt=args.prompt, prompt_human=args.prompt_human, negative_prompt=args.negative_prompt, negative_prompt_human=args.negative_prompt_human,
         mesh_path=args.mesh_path, mesh_translation=args.mesh_translation, mesh_scale=args.mesh_scale, mesh_rotation_deg=args.mesh_rotation_deg, mesh_tilt_deg=args.mesh_tilt_deg,
         checkpoint_interval=args.checkpoint_interval, use_wandb=args.use_wandb, nerf_init_args=args.nerf_init_args, nerf_refit_args=args.nerf_refit_args,
-        smpl_variant=args.smpl_variant, smpl_texture=args.smpl_texture, smpl_shape=args.smpl_shpae, smpl_gender=args.smpl_gender,
+        smpl_variant=args.smpl_variant, smpl_texture=args.smpl_texture, smpl_shape=args.smpl_shape, smpl_gender=args.smpl_gender,
         openpose_dir=args.openpose_dir, openpose_bin=args.openpose_bin
     )
     print(f"[dreamhoi] Run finished.")

@@ -77,7 +77,7 @@ You may also add
     * `system.composed_renderer.mesh.normalize=...`: whether to normalize the position and scale of the object mesh (default true)
     * `system.composed_guidance.guidance_scale=50`: guidance scale for DeepFloyd IF
     * `system.composed_guidance.max_step_percent=0.98`: upper bound of noise level to sample from for DeepFloyd IF (can be a schedule)
-    * `system.trainer.max_steps=10000`: number of iterations for NeRF fitting
+    * `trainer.max_steps=10000`: number of iterations for NeRF fitting
   * Loss weights and additional regularizers:
     * `system.loss.lambda_composed_sds=0.9`: weight of HOI supervision ($\lambda_{\text{SDS-HO}}$ in paper)
     * `system.loss.lambda_composed_individual_sds=0.05`: weight of human-only supervision by DeepFloyd IF ($\lambda_{\text{SDS-H}}$ in paper)
