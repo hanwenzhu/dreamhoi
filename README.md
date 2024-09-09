@@ -71,6 +71,7 @@ You may also add
     * `system.composed_renderer.mesh.normalize=...`: whether to normalize the position and scale of the object mesh (default true)
     * `system.composed_guidance.guidance_scale=50`: guidance scale for DeepFloyd IF
     * `system.composed_guidance.max_step_percent=0.98`: upper bound of noise level to sample from for DeepFloyd IF (can be a schedule)
+    * `system.trainer.max_steps=10000`: number of iterations for NeRF fitting
   * Loss weights and additional regularizers:
     * `system.loss.lambda_composed_sds=0.9`: weight of HOI supervision ($\lambda_{\text{SDS-HO}}$ in paper)
     * `system.loss.lambda_composed_individual_sds=0.05`: weight of human-only supervision by DeepFloyd IF ($\lambda_{\text{SDS-H}}$ in paper)
@@ -85,7 +86,7 @@ You may also add
     * `system.loss.lambda_intersection=1.0` penalizes intersection between NeRF and object mesh ($\lambda_{\text{I}}$ in paper)
 * `--nerf_refit_args arg1=value1 arg2=value2 ...` to supply extra arguments to threestudio as hyperparemters.
   * Mostly the same as parameters above. Note the default values of `lambda_sparsity_above_threshold`, `max_step_percent`, `random_aug_prob`, etc. are adjusted.
-* Please also see [threestudio docs](https://github.com/threestudio-project/threestudio/blob/main/DOCUMENTATION.md) for a more complete set of options, and our config YAML [for NeRF initialization](src/MVDream-threestudio/configs/mvdream-with-deepfloyd-with-mesh.yaml) and [for NeRF refitting](src/MVDream-threestudio/configs/smpl-with-mesh-nerf-if.yaml) for default values.
+* For both of the above see [threestudio docs](https://github.com/threestudio-project/threestudio/blob/main/DOCUMENTATION.md) for a more complete set of options, and our config YAML [for NeRF initialization](src/MVDream-threestudio/configs/mvdream-with-deepfloyd-with-mesh.yaml) and [for NeRF refitting](src/MVDream-threestudio/configs/smpl-with-mesh-nerf-if.yaml) for default values.
 * Note `system.composed_only` is by default true for NeRF re-fitting, i.e. MVDream is disabled (as discussed in paper). If you want to use MVDream guidance, you need to modify the [config](src/MVDream-threestudio/configs/smpl-with-mesh-nerf-if.yaml) and use `random-multiview-camera-datamodule` for `data_type`, setting parameters under `data` as in the [initialization config](src/MVDream-threestudio/configs/mvdream-with-deepfloyd-with-mesh.yaml).
 
 ## Tricks
