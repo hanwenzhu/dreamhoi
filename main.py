@@ -85,7 +85,7 @@ def run_nerf(
     return experiment_name
 
 def run_openpose(
-    openpose_dir: str, rgb_dir: str, keypoints_dir: str
+    openpose_dir: str, openpose_bin: Optional[str], rgb_dir: str, keypoints_dir: str
 ):
     """Runs openpose, with input images from `rgb_dir` and output keypoint JSON files to `keypoints_dir`"""
     if os.path.isfile(os.path.join(keypoints_dir, "99_keypoints.json")):
@@ -95,7 +95,10 @@ def run_openpose(
     print("[dreamhoi] Running OpenPose")
 
     # Binary path
-    openpose_bin_path = os.path.join(openpose_dir, "build", "examples", "openpose", "openpose.bin")
+    if openpose_bin is None:
+        openpose_bin_path = os.path.join(openpose_dir, "build", "examples", "openpose", "openpose.bin")
+    else:
+        openpose_bin_path = openpose_bin
     openpose_env_variables = {
         **os.environ,
         "LD_LIBRARY_PATH": (os.path.join(openpose_dir, "build", "src", "openpose") +
@@ -118,14 +121,14 @@ def run_openpose(
 
 def predict_smpl(
     experiment_name: str, smpl_variant, smpl_texture, smpl_shape,
-    openpose_dir, predict_from="no_mesh"
+    openpose_dir, openpose_bin, predict_from="no_mesh"
 ):
     experiment_save_dir = os.path.join(THREESTUDIO_PATH, "outputs", experiment_name, "save")
     rgb_dir = os.path.join(experiment_save_dir, f"it10000-test-{predict_from}-rgb")
     keypoints_dir = os.path.join(experiment_save_dir, f"it10000-test-{predict_from}-openpose")
     metadata_dir = os.path.join(experiment_save_dir, f"it10000-test-{predict_from}-metadata")
 
-    run_openpose(openpose_dir=openpose_dir, rgb_dir=rgb_dir, keypoints_dir=keypoints_dir)
+    run_openpose(openpose_dir=openpose_dir, openpose_bin=openpose_bin, rgb_dir=rgb_dir, keypoints_dir=keypoints_dir)
 
     data_dir = os.path.join(SMPLIFY_DATA_PATH, experiment_name)
     out_dir = os.path.join(data_dir, smpl_variant)
@@ -173,7 +176,7 @@ def run_full(
     num_iterations, tag, prompt, prompt_human, negative_prompt, negative_prompt_human,
     mesh_path, mesh_translation, mesh_scale, mesh_rotation_deg, mesh_tilt_deg,
     checkpoint_interval, use_wandb, nerf_init_args, nerf_refit_args,
-    smpl_variant, smpl_texture, smpl_shape, openpose_dir,
+    smpl_variant, smpl_texture, smpl_shape, openpose_dir, openpose_bin
 ):
     print("[dreamhoi] Running NeRF initialization")
     experiment_name = run_nerf(
@@ -182,7 +185,7 @@ def run_full(
         checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, *nerf_init_args,
         initialization=True
     )
-    smpl_mesh_path, _ = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, openpose_dir)
+    smpl_mesh_path, _ = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, openpose_dir, openpose_bin)
     for i in range(num_iterations):
         print(f"[dreamhoi] Running NeRF re-fitting iteration {i}")
         experiment_name = run_nerf(
@@ -191,7 +194,7 @@ def run_full(
             checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, *nerf_refit_args,
             initialization=False, smpl_mesh_path=smpl_mesh_path,
         )
-        smpl_mesh_path, smpl_param_path = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, openpose_dir)
+        smpl_mesh_path, smpl_param_path = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, openpose_dir, openpose_bin)
     return smpl_param_path
 
 if __name__ == "__main__":
@@ -212,7 +215,8 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_interval", type=int, default=1000, help="Save checkpoint every number of steps (default 10000 steps total)")
     parser.add_argument("--use_wandb", action="store_true", help="Use weights & biases (recommended)")
     parser.add_argument("--smpl_variant", default="smplh", help="Variant of SMPL to use (smpl or smplh)")
-    parser.add_argument("--openpose_dir", type=str, required=True, help="Path to OpenPose project directory. The OpenPose binary should be at [openpose_dir]/build/examples/openpose/openpose.bin")
+    parser.add_argument("--openpose_dir", type=str, required=True, help="Path to OpenPose project directory")
+    parser.add_argument("--openpose_bin", type=str, default=None, help="Path to OpenPose binary (/path/to/openpose.bin). Default is [openpose_dir]/build/examples/openpose/openpose.bin")
     parser.add_argument("--nerf_init_args", nargs="*", help="Extra threestudio arguments for NeRF initialization")
     parser.add_argument("--nerf_refit_args", nargs="*", help="Extra threestudio arguments for NeRF re-fitting")
 
@@ -222,5 +226,5 @@ if __name__ == "__main__":
         mesh_path=args.mesh_path, mesh_translation=args.mesh_translation, mesh_scale=args.mesh_scale, mesh_rotation_deg=args.mesh_rotation_deg, mesh_tilt_deg=args.mesh_tilt_deg,
         checkpoint_interval=args.checkpoint_interval, use_wandb=args.use_wandb, nerf_init_args=args.nerf_init_args, nerf_refit_args=args.nerf_refit_args,
         smpl_variant=args.smpl_variant, smpl_texture=args.smpl_texture, smpl_shape=args.smpl_shpae,
-        openpose_dir=args.openpose_dir
+        openpose_dir=args.openpose_dir, openpose_bin=args.openpose_bin
     )

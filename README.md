@@ -50,8 +50,8 @@ where:
 * `checkpoint_interval` is the number of steps before saving a checkpoint model. For reference, by default, 10000 is run for each iteration
 * `use_wandb` if set, tries to use weights & biases. This needs `wandb` installed and configured on the system (recommended)
 * `smpl_variant` is the variant of SMPL for our pipeline. Currently only `smplh` (default) and `smpl` are supported
-* `openpose_path` is the path to built OpenPose binary
-* `openpose_cwd` is the working directory in which to run `openpose_path`
+* `openpose_dir` is the path to the OpenPose project directory
+* `openpose_bin` is the path to the OpenPose built binary file (default is `[openpose_dir]/build/examples/openpose/openpose.bin`)
 
 [`main.py`](main.py) is a wrapper around our pipeline, and you can modify our pipeline by directly modifying it.
 
