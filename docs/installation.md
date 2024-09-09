@@ -8,7 +8,8 @@ The code is tested on Debian, though any Linux environment should work.
 ### Environment setup
 Clone the repository:
 ```sh
-git clone --recursive https://github.com/hanwenzhu/dreamhoi.git
+git clone https://github.com/hanwenzhu/dreamhoi.git
+git submodule update --init --recursive
 cd dreamhoi
 ```
 

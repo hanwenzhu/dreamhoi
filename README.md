@@ -7,7 +7,7 @@ We present DreamHOI, a novel method for zero-shot synthesis of human-object inte
 
 ## Installation
 
-Please follow [installation.md](docs/installation.md) to set up your system for DreamHOI.
+Please carefully follow [installation.md](docs/installation.md) to set up your system for DreamHOI.
 
 ## Running
 
@@ -18,6 +18,9 @@ python main.py \
   --num_iterations 1 \
   --tag sit-ball \
   --smpl_texture /path/to/smpl/texture.png \
+  --smpl_shape /path/to/smpl/shape.npy \
+  --smpl_gender female \
+  --smpl_variant smplh \
   --prompt "A photo of a person sitting on a ball, high detail, photography" \
   --prompt_human "A photo of a person, high detail, photography" \
   --negative_prompt "missing limbs, missing legs, missing arms" \
@@ -29,31 +32,34 @@ python main.py \
   --mesh_tilt_deg 0.0 \
   --checkpoint_interval 1000 \
   --use_wandb \
-  --smpl_variant smplh \
   --openpose_dir /path/to/openpose \
-  --openpose_bin /path/to/openpose/build/examples/openpose/openpose.bin
+  --openpose_bin /path/to/openpose/build/examples/openpose/openpose.bin \
+  --nerf_init_args ... \
+  --nerf_refit_args ...
 ```
 where:
-* `num_iterations` is the number of times to reinitiate NeRF
-* `tag` is a name of this experiment (for naming files)
+* `num_iterations` is the number of times to reinitiate NeRF (≥ 0)
+* `tag` is a unique name for this run (used for naming files)
 * `smpl_texture` is the texture of SMPL for the generation, in .png (see [examples](https://dancasas.github.io/projects/SMPLitex/SMPLitex-dataset.html)). If not provided, we output pose parameters (bone rotations) without generating the final human mesh.
-* `smpl_shape` is an .npy containing a (10,) array of SMPL shape parameters
+* `smpl_shape` is an .npy containing a (10,) array of SMPL shape parameters. Default is to predict shape by SMPLify
+* `smpl_gender` is gender for SMPL models to use (male, female, or neutral). Note SMPL+H does not support neutral (see src/MultiviewSMPLifyX/cfg_files/ for defaults)
+* `smpl_variant` is the variant of SMPL for our pipeline. Currently only `smplh` (default) and `smpl` are supported
 * `prompt` is a prompt for supervising the overall HOI
 * `prompt_human` is a prompt for supervising the human part
 * `negative_prompt` is a negative prompt for supervising the overall HOI
 * `negative_prompt_human` is a negative prompt for supervising the human part
-* `mesh_path` is path to the mesh of the object (in .obj, .glb, etc)
+* `mesh_path` is path to the mesh of the object (in a mesh format such as .obj, .glb)
 * `mesh_translation` is where to position the object in the scene (+x is front, +z is up)
 * `mesh_scale` is the size of the object
 * `mesh_rotation_deg` rotates the object mesh (counterclockwise viewing from above)
 * `mesh_tilt_deg` tilts the object mesh
 * `checkpoint_interval` is the number of steps before saving a checkpoint model. For reference, by default, 10000 is run for each iteration
 * `use_wandb` if set, tries to use weights & biases. This needs `wandb` installed and configured on the system (recommended)
-* `smpl_variant` is the variant of SMPL for our pipeline. Currently only `smplh` (default) and `smpl` are supported
 * `openpose_dir` is the path to the OpenPose project directory
-* `openpose_bin` is the path to the OpenPose built binary file (default is `[openpose_dir]/build/examples/openpose/openpose.bin`)
+* `openpose_bin` is the path to the OpenPose built binary file (default is `{openpose_dir}/build/examples/openpose/openpose.bin`)
+* `nerf_init_args`, `nerf_refit_args` are optional additional settings for NeRF fitting (see below)
 
-[`main.py`](main.py) is a wrapper around our pipeline, and you can modify our pipeline by directly modifying it.
+[`main.py`](main.py) is a wrapper around our pipeline, and you can modify our pipeline by directly modifying it. The output will typically be in `dreamhoi/smplify/smpl-with-mesh-nerf-if/{tag}_{num_iterations}`.
 
 ##### Extra configurations
 You may also add
@@ -104,4 +110,4 @@ You may also add
 3. 
 
 ## License
-Some parts of this project uses third-party software. See [LICENSE](LICENSE) for their respective notices and licenses.
+DreamHOI is released under MIT License. Some parts of this project uses third-party software. See [LICENSE](LICENSE) for their respective notices and licenses.

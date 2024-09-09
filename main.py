@@ -120,7 +120,7 @@ def run_openpose(
     
 
 def predict_smpl(
-    experiment_name: str, smpl_variant, smpl_texture, smpl_shape,
+    experiment_name: str, smpl_variant, smpl_texture, smpl_shape, smpl_gender,
     openpose_dir, openpose_bin, predict_from="no_mesh"
 ):
     experiment_save_dir = os.path.join(THREESTUDIO_PATH, "outputs", experiment_name, "save")
@@ -167,6 +167,10 @@ def predict_smpl(
             command.extend([
                 "--mesh_texture_fn", smpl_texture
             ])
+        if smpl_gender is not None:
+            command.extend([
+                "--gender", smpl_gender
+            ])
         print(command)
         subprocess.run(command, check=True, cwd=SMPLIFY_PATH)
     
@@ -176,7 +180,7 @@ def run_full(
     num_iterations, tag, prompt, prompt_human, negative_prompt, negative_prompt_human,
     mesh_path, mesh_translation, mesh_scale, mesh_rotation_deg, mesh_tilt_deg,
     checkpoint_interval, use_wandb, nerf_init_args, nerf_refit_args,
-    smpl_variant, smpl_texture, smpl_shape, openpose_dir, openpose_bin
+    smpl_variant, smpl_texture, smpl_shape, smpl_gender, openpose_dir, openpose_bin
 ):
     print("[dreamhoi] Running NeRF initialization")
     experiment_name = run_nerf(
@@ -185,7 +189,7 @@ def run_full(
         checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, *nerf_init_args,
         initialization=True
     )
-    smpl_mesh_path, _ = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, openpose_dir, openpose_bin)
+    smpl_mesh_path, _ = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, smpl_gender, openpose_dir, openpose_bin)
     for i in range(num_iterations):
         print(f"[dreamhoi] Running NeRF re-fitting iteration {i}")
         experiment_name = run_nerf(
@@ -194,8 +198,8 @@ def run_full(
             checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, *nerf_refit_args,
             initialization=False, smpl_mesh_path=smpl_mesh_path,
         )
-        smpl_mesh_path, smpl_param_path = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, openpose_dir, openpose_bin)
-    return smpl_param_path
+        smpl_mesh_path, smpl_param_path = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, smpl_gender, openpose_dir, openpose_bin)
+    return smpl_mesh_path, smpl_param_path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the entire DreamHOI pipeline")
@@ -203,10 +207,12 @@ if __name__ == "__main__":
     parser.add_argument("--tag", type=str, required=True, help="Tag description of this experiment (e.g. sit-ball)")
     parser.add_argument("--smpl_texture", type=str, default=None, help="If provided, apply this texture image as the human identity, and output a human mesh using this texture.")
     parser.add_argument("--smpl_shape", type=str, default=None, help="If provided, use this .npy file as human shape parameters (shape (10,) 'betas' in SMPL) for the mesh. If not specified, we predict this parameter using SMPLify-X.")
+    parser.add_argument("--smpl_gender", type=str, default=None, help="Which gender for SMPL models to use (male, female, or neutral). See src/MultiviewSMPLifyX/cfg_files/*.yaml for defaults")
+    parser.add_argument("--smpl_variant", default="smplh", help="Variant of SMPL to use (smpl or smplh)")
     parser.add_argument("--prompt", type=str, required=True, help="Prompt for the HOI (e.g. A photo of person sitting on a ball, high detail, photography)")
     parser.add_argument("--prompt_human", type=str, default="A photo of a person, high detail, photography", help="Prompt for the human-only render (e.g. A photo of a person, high detail, photography)")
-    parser.add_argument("--negative_prompt", type=str, default="missing limbs, missing legs, missing arms", prompt="Negative prompt for the HOI")
-    parser.add_argument("--negative_prompt_human", type=str, default="missing limbs, missing legs, missing arms", prompt="Negative prompt for the human-only render (e.g. ball, missing limbs, missing legs, missing arms)")
+    parser.add_argument("--negative_prompt", type=str, default="missing limbs, missing legs, missing arms", help="Negative prompt for the HOI")
+    parser.add_argument("--negative_prompt_human", type=str, default="missing limbs, missing legs, missing arms", help="Negative prompt for the human-only render (e.g. ball, missing limbs, missing legs, missing arms)")
     parser.add_argument("--mesh_path", type=str, required=True, help="Path to object mesh (e.g. /path/to/ball.obj)")
     parser.add_argument("--mesh_translation", type=str, default="[0,0,0]", help="Translate the object mesh (+x is front, +z is up)")
     parser.add_argument("--mesh_scale", type=float, default=0.5, help="Scale the object mesh size by a constant")
@@ -214,17 +220,19 @@ if __name__ == "__main__":
     parser.add_argument("--mesh_tilt_deg", type=float, default=0., help="Tilt the object mesh")
     parser.add_argument("--checkpoint_interval", type=int, default=1000, help="Save checkpoint every number of steps (default 10000 steps total)")
     parser.add_argument("--use_wandb", action="store_true", help="Use weights & biases (recommended)")
-    parser.add_argument("--smpl_variant", default="smplh", help="Variant of SMPL to use (smpl or smplh)")
     parser.add_argument("--openpose_dir", type=str, required=True, help="Path to OpenPose project directory")
-    parser.add_argument("--openpose_bin", type=str, default=None, help="Path to OpenPose binary (/path/to/openpose.bin). Default is [openpose_dir]/build/examples/openpose/openpose.bin")
+    parser.add_argument("--openpose_bin", type=str, default=None, help="Path to OpenPose binary (/path/to/openpose.bin). Default is {openpose_dir}/build/examples/openpose/openpose.bin")
     parser.add_argument("--nerf_init_args", nargs="*", help="Extra threestudio arguments for NeRF initialization")
     parser.add_argument("--nerf_refit_args", nargs="*", help="Extra threestudio arguments for NeRF re-fitting")
 
     args = parser.parse_args()
-    smpl_param_path = run_full(
+    smpl_mesh_path, smpl_param_path = run_full(
         num_iterations=args.num_iterations, tag=args.tag, prompt=args.prompt, prompt_human=args.prompt_human, negative_prompt=args.negative_prompt, negative_prompt_human=args.negative_prompt_human,
         mesh_path=args.mesh_path, mesh_translation=args.mesh_translation, mesh_scale=args.mesh_scale, mesh_rotation_deg=args.mesh_rotation_deg, mesh_tilt_deg=args.mesh_tilt_deg,
         checkpoint_interval=args.checkpoint_interval, use_wandb=args.use_wandb, nerf_init_args=args.nerf_init_args, nerf_refit_args=args.nerf_refit_args,
-        smpl_variant=args.smpl_variant, smpl_texture=args.smpl_texture, smpl_shape=args.smpl_shpae,
+        smpl_variant=args.smpl_variant, smpl_texture=args.smpl_texture, smpl_shape=args.smpl_shpae, smpl_gender=args.smpl_gender,
         openpose_dir=args.openpose_dir, openpose_bin=args.openpose_bin
     )
+    print(f"[dreamhoi] Run finished.")
+    print(f"  Resulting human mesh: {smpl_mesh_path}")
+    print(f"  Resulting SMPL parameters: {smpl_param_path}")
