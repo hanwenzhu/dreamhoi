@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
-from typing import Optional
+from typing import Optional, List
 
 DREAMHOI_PATH = os.path.dirname(os.path.abspath(__file__))
 THREESTUDIO_PATH = os.path.join(DREAMHOI_PATH, "src", "MVDream-threestudio")
@@ -14,7 +14,7 @@ PYTHON_PATH = sys.argv[0]  # or os.path.join(DREAMHOI_PATH, "venv", "bin", "pyth
 def run_nerf(
     tag: str, prompt: str, prompt_human: str, negative_prompt: str, negative_prompt_human: str,
     mesh_path: str, mesh_translation: str, mesh_scale: float, mesh_rotation_deg: float, mesh_tilt_deg: float,
-    checkpoint_interval: int, use_wandb: bool, *args,
+    checkpoint_interval: int, use_wandb: bool, args: List[str],
     initialization: bool = True, smpl_mesh_path: Optional[str] = None,
 ):
     """Fit a NeRF with an object mesh using threestudio.
@@ -186,16 +186,16 @@ def run_full(
     experiment_name = run_nerf(
         tag=f"{tag}_0", prompt=prompt, prompt_human=prompt_human, negative_prompt=negative_prompt, negative_prompt_human=negative_prompt_human,
         mesh_path=mesh_path, mesh_translation=mesh_translation, mesh_scale=mesh_scale, mesh_rotation_deg=mesh_rotation_deg, mesh_tilt_deg=mesh_tilt_deg,
-        checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, *nerf_init_args,
+        checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, args=nerf_init_args,
         initialization=True
     )
     smpl_mesh_path, _ = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, smpl_gender, openpose_dir, openpose_bin)
     for i in range(num_iterations):
         print(f"[dreamhoi] Running NeRF re-fitting iteration {i}")
         experiment_name = run_nerf(
-            f"{tag}_{i + 1}", prompt=prompt, prompt_human=prompt_human, negative_prompt=negative_prompt, negative_prompt_human=negative_prompt_human,
+            tag=f"{tag}_{i + 1}", prompt=prompt, prompt_human=prompt_human, negative_prompt=negative_prompt, negative_prompt_human=negative_prompt_human,
             mesh_path=mesh_path, mesh_translation=mesh_translation, mesh_scale=mesh_scale, mesh_rotation_deg=mesh_rotation_deg, mesh_tilt_deg=mesh_tilt_deg,
-            checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, *nerf_refit_args,
+            checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, args=nerf_refit_args,
             initialization=False, smpl_mesh_path=smpl_mesh_path,
         )
         smpl_mesh_path, smpl_param_path = predict_smpl(experiment_name, smpl_variant, smpl_texture, smpl_shape, smpl_gender, openpose_dir, openpose_bin)
