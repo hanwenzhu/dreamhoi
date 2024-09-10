@@ -78,7 +78,7 @@ huggingface-cli login
 Note that the directory `src/MVDream-threestudio/.threestudio_cache/` will be used for caching model weights (so faster read speeds help), which can take 2GB. The directory `src/MVDream-threestudio/outputs/` will store intermediate NeRF results which can take some space, and `smplify/` will be used to store results.
 
 ### Download SMPL models
-Parts of our code uses [SMPL](https://smpl.is.tue.mpg.de) and its derivatives. Our paper presents results on the SMPL+H models, although you may also use plain SMPL models for our pipeline. We download these models (following their [instructions](https://github.com/vchoutas/smplx/blob/main/README.md)). You need to download the VPoser model and either the 3 SMPL models or the 2 SMPL+H models (or both) as below.
+DreamHOI needs SMPL models its and derivatives downloaded from their project pages. Our paper presents results on the SMPL+H models, although you may also use plain SMPL models for our pipeline. You need to download the VPoser model and either the 3 SMPL models or the 2 SMPL+H models (or both) as below.
 
 ##### Download SMPL models
 From the “Downloads” page of [SMPL](https://smpl.is.tue.mpg.de) download “version 1.0.0 for Python 2.7” for male and female models. In order to download, you need to first log in and accept the license. Then download the gender-neutral model at [SMPLify](https://smplify.is.tue.mpg.de/download.php) “Downloads” page, inside `smplify_code_v2.zip`. Again you would need to log in and accept terms. You can use any one of the genders for our pipeline (see README).
@@ -88,7 +88,7 @@ Follow [these instructions](https://github.com/vchoutas/smplx/tree/main/tools#re
 ##### Download SMPL+H models
 Go to [MANO](https://mano.is.tue.mpg.de) and log in and accept the terms for download. Go to “Downloads” page, then click “Models & Code” to download a zip file with 4 `.pkl` files inside. Follow [these instructions](https://github.com/vchoutas/smplx/tree/main/tools#removing-chumpy-objects) to prepare the `.pkl` models (it changes chumpy arrays to numpy arrays). The script runs in Python 2 (or you can edit manually to make it run in Python 3). Then follow [these instructions](https://github.com/vchoutas/smplx/blob/main/tools/README.md#merging-smpl-h-and-mano-parameters) to merge the 4 files into 2, one for each gender: `SMPLH_FEMALE.pkl`, `SMPLH_MALE.pkl`.
 
-##### Download VPoser (required)
+##### Download VPoser model
 Go to [SMPL-X](https://smpl-x.is.tue.mpg.de), log in and accept terms, and download “VPoser v1.0” in the “Downloads” page. You should find `snapshots/TR00_E096.pt` in the downloaded zip.
 
 ##### Place models in dreamhoi
