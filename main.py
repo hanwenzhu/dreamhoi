@@ -247,7 +247,7 @@ if __name__ == "__main__":
     print(f"  Resulting human mesh: {smpl_mesh_path}")
     print(f"  Resulting SMPL parameters: {smpl_param_path}")
     
-    from export_mesh import mesh_from_path
+    from export_object_mesh import mesh_from_path
     object_mesh = mesh_from_path(file_path=args.mesh_path, y_up=True, normalize=args.mesh_normalize, scale=args.mesh_scale, rotation_deg=args.mesh_rotation_deg, tilt_deg=args.mesh_tilt_deg, translation=args.translation)
     object_mesh_out_path = os.path.join(os.path.dirname(smpl_mesh_path), "object_mesh.obj")
     object_mesh.export(object_mesh_out_path)
