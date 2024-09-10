@@ -105,32 +105,28 @@ You may also add
 * Note `system.composed_only` is by default true for NeRF re-fitting, i.e. MVDream is disabled (as discussed in paper). If you want to use MVDream guidance, you need to modify the [config](src/MVDream-threestudio/configs/smpl-with-mesh-nerf-if.yaml) and use `random-multiview-camera-datamodule` for `data_type`, setting parameters under `data` as in the [initialization config](src/MVDream-threestudio/configs/mvdream-with-deepfloyd-with-mesh.yaml).
 
 ## Tips to improve generation
-* Tune hyperparams:
-  * The mixture ratio between DeepFloyd IF and MVDream
-    * Parameter names: `--nerf_*_args system.loss.lambda_*_sds` (see above)
+* Tune hyperparameters:
+  * The mixture ratio between DeepFloyd IF and MVDream `--nerf_*_args system.loss.lambda_*_sds`
     * The difference between DeepFloyd IF and MVDream guidance are discussed in the paper. On a high level, DeepFloyd IF has a much better understanding of text, while MVDream is good at multi-view consistent, detailed 3D generation.
-  * Noise levels of each guidance
-    * Parameter names: `--nerf_*_args system.(composed_)guidance.max_step_percent` (see above)
+  * Noise levels `--nerf_*_args system.(composed_)guidance.max_step_percent`
     * This parameter controls the upper bound *t* for noise levels, which are sampled from [0.02, *t*] uniformly. A higher value allows the guidance model to edit high-level features (e.g., changing semantic relation) and a lower value allows the guidance model to edit lower-level details. It may also be beneficial to set different values for DeepFloyd IF and MVDream.
-  * Guidance scale
-    * Parameter names: `--nerf_*_args system.(composed_)guidance.guidance_scale` (see above)
-    * Increasing the guidance scale (default 50) significantly helps guidance models to follow the text prompt more
-  * Regularizer weights
-    * Parameter names: `--nerf_*_args system.loss.lambda_*` (see above)
+  * Guidance scale `--nerf_*_args system.(composed_)guidance.guidance_scale`
+    * Increasing the guidance scale (default 50) significantly helps guidance models to follow the text prompt more.
+  * Regularizer weights `--nerf_*_args system.loss.lambda_*`
     * The different losses and regularizers are extensively discussed in the paper.
     * Note that sometimes setting these weights to 0, i.e. disabling some regularizers, may work better.
-  * Tuning mesh position
-    * Parameters names: `--mesh_*` (see above)
-    * Make sure the mesh faces the front (+x) to make MVDream guidance work better
+  * Tuning mesh position `--mesh_*`
+    * It is beneficial to scale and place the mesh in the scene, so that it is natural for a human in the center of that scene to interact with the mesh.
+    * Also make sure the mesh faces the front (+x) to make MVDream guidance work better.
 * Prompting
-    * Make the prompts more specific
-      * Describe mesh accurately (e.g. "vintage tv" instead of "tv") to avoid the NeRF from generating a new object
-      * You may describe the semantic relation between the human and the object very specifically ("A person sitting on a ball. Her upper body sits on top of the ball, her elbows rest on her knees, and her feet rest on the floor.") though we are not sure of its effects
-    * Negative prompts also help in producing a good human NeRF.
-      * Negative prompts like "missing limbs" ensures the model produces an entire human NeRF (not just parts) so the pose estimation stage is much easier
-*	Other less important parameters
-  * Traning parameters like learning rate, batch size, number of iterations (see above)
-  * Background color `--nerf_*_args system.background.*` (see above)
+  * Make the prompts more specific
+    * Describe mesh accurately (e.g. "vintage tv" instead of "tv") to avoid the NeRF from generating a new object.
+    * You may describe the semantic relation between the human and the object very specifically ("A person sitting on a ball. Her upper body sits on top of the ball, her elbows rest on her knees, and her feet rest on the floor.") which sometimes improve quality.
+  * Negative prompts also help in producing a good human NeRF.
+    * Negative prompts like "missing limbs" ensures the model produces an entire human NeRF (not just parts) so the pose estimation stage is much easier.
+*	Less important parameters
+    * Traning parameters like learning rate, batch size, number of iterations
+    * Background color `--nerf_*_args system.background.*`
 
 ## License
 DreamHOI is released under MIT License. Some parts of this project uses third-party software. See [LICENSE](LICENSE) for their respective notices and licenses.
