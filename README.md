@@ -52,7 +52,7 @@ where:
 * `mesh_path` is path to the mesh of the object (in a mesh format such as .obj, .glb). Note that we assume the mesh is Y-up, X-front
 * `mesh_normalize` if set, normalize the mesh scale so it is approximately unit size
 * `mesh_translation` is where to position the object in the scene in x, y, z (+x is front, +z is up)
-* `mesh_scale` is a scalar to scale of the object mesh (0.2–0.4 is used in the paper)
+* `mesh_scale` is a scalar to scale of the object mesh (mesh_scale 0.2–0.4 with mesh_normalize is used in the paper)
 * `mesh_rotation_deg` rotates the object mesh (counterclockwise viewing from above)
 * `mesh_tilt_deg` tilts the object mesh
 * `checkpoint_interval` is the number of steps before saving a checkpoint model. For reference, by default, 10000 is run for each iteration
