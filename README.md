@@ -86,7 +86,7 @@ You may also add
     * `system.composed_renderer.mesh.normalize=...`: whether to normalize the position and scale of the object mesh (default true)
     * `system.composed_guidance.guidance_scale=50`: guidance scale for DeepFloyd IF
     * `system.composed_guidance.max_step_percent=0.98`: upper bound of noise level to sample from for DeepFloyd IF (can be a schedule)
-    * `trainer.max_steps=10000`: number of iterations for NeRF fitting
+    * `trainer.max_steps=10000`: number of steps to train NeRF during this fitting iteration
   * Loss weights and additional regularizers:
     * `system.loss.lambda_composed_sds=0.9`: weight of HOI supervision ($\lambda_{\text{SDS-HO}}$ in paper)
     * `system.loss.lambda_composed_individual_sds=0.05`: weight of human-only supervision by DeepFloyd IF ($\lambda_{\text{SDS-H}}$ in paper)
@@ -101,8 +101,8 @@ You may also add
     * `system.loss.lambda_intersection=1.0` penalizes intersection between NeRF and object mesh ($\lambda_{\text{I}}$ in paper)
 * `--nerf_refit_args arg1=value1 arg2=value2 ...` to supply extra arguments to threestudio as hyperparemters.
   * Mostly the same as parameters above. Note the default values of `lambda_sparsity_above_threshold`, `max_step_percent`, `random_aug_prob`, etc. are adjusted.
-* For both of the above see [threestudio docs](https://github.com/threestudio-project/threestudio/blob/main/DOCUMENTATION.md) for a more complete set of options, and our config YAML [for NeRF initialization](src/MVDream-threestudio/configs/mvdream-with-deepfloyd-with-mesh.yaml) and [for NeRF refitting](src/MVDream-threestudio/configs/smpl-with-mesh-nerf-if.yaml) for default values.
-* Note `system.composed_only` is by default true for NeRF re-fitting, i.e. MVDream is disabled (as discussed in paper). If you want to use MVDream guidance, you need to modify the [config](src/MVDream-threestudio/configs/smpl-with-mesh-nerf-if.yaml) and use `random-multiview-camera-datamodule` for `data_type`, setting parameters under `data` as in the [initialization config](src/MVDream-threestudio/configs/mvdream-with-deepfloyd-with-mesh.yaml).
+* For both of the above see [threestudio docs](https://github.com/threestudio-project/threestudio/blob/main/DOCUMENTATION.md) for a more complete set of options, and our config YAML [for NeRF initialization](https://github.com/hanwenzhu/MVDream-threestudio/blob/main/configs/mvdream-with-deepfloyd-with-mesh.yaml) and [for NeRF refitting](https://github.com/hanwenzhu/MVDream-threestudio/blob/main/configs/smpl-with-mesh-nerf-if.yaml) for default values.
+* Note `system.composed_only` is by default true for NeRF re-fitting, i.e. MVDream is disabled (as discussed in paper). If you want to use MVDream guidance, you need to modify the [config](https://github.com/hanwenzhu/MVDream-threestudio/blob/main/configs/smpl-with-mesh-nerf-if.yaml) and use `random-multiview-camera-datamodule` for `data_type`, setting parameters under `data` as in the [initialization config](https://github.com/hanwenzhu/MVDream-threestudio/blob/main/configs/mvdream-with-deepfloyd-with-mesh.yaml).
 
 ## Tips to improve generation
 * Tune hyperparameters:
@@ -118,6 +118,9 @@ You may also add
   * Tuning mesh position `--mesh_*`
     * It is beneficial to scale and place the mesh in the scene, so that it is natural for a human in the center of that scene to interact with the mesh.
     * Also make sure the mesh faces the front (+x) to make MVDream guidance work better.
+  * Number of NeRF refittings `--num_iterations`
+    * Sometimes different `num_iterations` (even 0) may be acceptable; we recommend trying 0–2.
+  * Note that most `--nerf_*_args ...` hyperparameters can also follow a schedule; e.g. `system.guidance.max_step_percent=[0,0.98,0.50,8000]` to interpolate from 0.98 to 0.50 over steps 0–8000
 * Prompting
   * Make the prompts more specific
     * Describe mesh accurately (e.g. "vintage tv" instead of "tv") to avoid the NeRF from generating a new object.
@@ -125,8 +128,9 @@ You may also add
   * Negative prompts also help in producing a good human NeRF.
     * Negative prompts like "missing limbs" ensures the model produces an entire human NeRF (not just parts) so the pose estimation stage is much easier.
 *	Less important parameters
-    * Traning parameters like learning rate, batch size, number of iterations
-    * Background color `--nerf_*_args system.background.*`
+  * Traning parameters like learning rate, batch size, number of steps per iteration
+    * Reducing batch size and number of steps (to say 3000) can reduce training costs but may affect quality
+  * Background color `--nerf_*_args system.background.*`
 
 ## License
 DreamHOI is released under MIT License. Some parts of this project uses third-party software. See [LICENSE](LICENSE) for their respective notices and licenses.
