@@ -26,7 +26,8 @@ python main.py \
   --negative_prompt "missing limbs, missing legs, missing arms" \
   --negative_prompt_human "ball, missing limbs, missing legs, missing arms" \
   --mesh_path /path/to/ball.obj \
-  --mesh_translation "[0.0, 0.0, -0.3]" \
+  --mesh_normalize \
+  --mesh_translation 0.0 0.0 -0.3 \
   --mesh_scale 0.3 \
   --mesh_rotation_deg 0.0 \
   --mesh_tilt_deg 0.0 \
@@ -49,8 +50,9 @@ where:
 * `negative_prompt` is a negative prompt for supervising the overall HOI
 * `negative_prompt_human` is a negative prompt for supervising the human part
 * `mesh_path` is path to the mesh of the object (in a mesh format such as .obj, .glb)
-* `mesh_translation` is where to position the object in the scene (+x is front, +z is up)
-* `mesh_scale` is the size of the object
+* `mesh_normalize` if set, normalize the mesh scale so it is approximately unit size
+* `mesh_translation` is where to position the object in the scene in x, y, z (+x is front, +z is up)
+* `mesh_scale` is a scalar to scale of the object mesh (0.2–0.4 is used in the paper)
 * `mesh_rotation_deg` rotates the object mesh (counterclockwise viewing from above)
 * `mesh_tilt_deg` tilts the object mesh
 * `checkpoint_interval` is the number of steps before saving a checkpoint model. For reference, by default, 10000 is run for each iteration

@@ -5,16 +5,18 @@ import subprocess
 import sys
 from typing import Optional, List
 
+from omegaconf import OmegaConf
+
 DREAMHOI_PATH = os.path.dirname(os.path.abspath(__file__))
 THREESTUDIO_PATH = os.path.join(DREAMHOI_PATH, "src", "MVDream-threestudio")
 SMPLIFY_DATA_PATH = os.path.join(DREAMHOI_PATH, "smplify")
 SMPLIFY_PATH = os.path.join(DREAMHOI_PATH, "src", "MultiviewSMPLifyX")
-PYTHON_PATH = sys.argv[0]  # or os.path.join(DREAMHOI_PATH, "venv", "bin", "python")
+PYTHON_PATH = sys.executable or "python"  # or os.path.join(DREAMHOI_PATH, "venv", "bin", "python")
 
 def run_nerf(
     tag: str, prompt: str, prompt_human: str, negative_prompt: str, negative_prompt_human: str,
-    mesh_path: str, mesh_translation: str, mesh_scale: float, mesh_rotation_deg: float, mesh_tilt_deg: float,
-    checkpoint_interval: int, use_wandb: bool, args: List[str],
+    mesh_path: str, mesh_normalize: bool, mesh_translation: List[float], mesh_scale: float, mesh_rotation_deg: float, mesh_tilt_deg: float,
+    checkpoint_interval: int, use_wandb: bool, args: Optional[List[str]],
     initialization: bool = True, smpl_mesh_path: Optional[str] = None,
 ):
     """Fit a NeRF with an object mesh using threestudio.
@@ -29,7 +31,7 @@ def run_nerf(
     command = [
         PYTHON_PATH,
         os.path.join(THREESTUDIO_PATH, "launch.py"),
-        "--train", "--gpu", 0, # run on first visible GPU
+        "--train", "--gpu", "0", # run on first visible GPU
     ]
 
     if initialization:
@@ -49,7 +51,7 @@ def run_nerf(
     if os.path.exists(last_ckpt_path):
         print("[dreamhoi] Found existing model, resuming training")
         command.extend([
-            "--config", os.path.join(experiment_path, "configs/parsed.yaml"),
+            "--config", os.path.join(experiment_path, "configs", "parsed.yaml"),
             f"resume={last_ckpt_path}"
         ])
     else:
@@ -72,14 +74,17 @@ def run_nerf(
         f"system.composed_prompt_processor.negative_prompt={negative_prompt}",
         f"system.prompt_processor.negative_prompt={negative_prompt_human}",
         f"system.composed_renderer.mesh_path={mesh_path}",
+        f"system.composed_renderer.mesh.normalize={mesh_normalize}",
         f"system.composed_renderer.mesh.scale={mesh_scale}",
         f"system.composed_renderer.mesh.translation={mesh_translation}",
         f"system.composed_renderer.mesh.rotation_deg={mesh_rotation_deg}",
         f"system.composed_renderer.mesh.tilt_deg={mesh_tilt_deg}",
-        *args
     ])
 
-    print(f"[dreamhoi] Running command: {command}")
+    if args is not None:
+        command.extend(args)
+
+    print(f"[dreamhoi] Running threestudio with command: {command}")
     subprocess.run(command, check=True, cwd=THREESTUDIO_PATH)
 
     return experiment_name
@@ -115,7 +120,7 @@ def run_openpose(
         # predict hand/face keypoints, for SMPL+H/SMPL-X
         "--hand", "--face",
     ]
-    print(command)
+    print(f"[dreamhoi] Running OpenPose with command: {command}")
     subprocess.run(command, check=True, env=openpose_env_variables, cwd=openpose_dir)
     
 
@@ -123,10 +128,13 @@ def predict_smpl(
     experiment_name: str, smpl_variant, smpl_texture, smpl_shape, smpl_gender,
     openpose_dir, openpose_bin, predict_from="no_mesh"
 ):
+    experiment_config = os.path.join(THREESTUDIO_PATH, "outputs", experiment_name, "configs", "parsed.yaml")
+    config = OmegaConf.load(experiment_config)
+    trainer_max_steps = config.trainer.max_steps
     experiment_save_dir = os.path.join(THREESTUDIO_PATH, "outputs", experiment_name, "save")
-    rgb_dir = os.path.join(experiment_save_dir, f"it10000-test-{predict_from}-rgb")
-    keypoints_dir = os.path.join(experiment_save_dir, f"it10000-test-{predict_from}-openpose")
-    metadata_dir = os.path.join(experiment_save_dir, f"it10000-test-{predict_from}-metadata")
+    rgb_dir = os.path.join(experiment_save_dir, f"it{trainer_max_steps}-test-{predict_from}-rgb")
+    keypoints_dir = os.path.join(experiment_save_dir, f"it{trainer_max_steps}-test-{predict_from}-openpose")
+    metadata_dir = os.path.join(experiment_save_dir, f"it{trainer_max_steps}-test-{predict_from}-metadata")
 
     run_openpose(openpose_dir=openpose_dir, openpose_bin=openpose_bin, rgb_dir=rgb_dir, keypoints_dir=keypoints_dir)
 
@@ -171,21 +179,21 @@ def predict_smpl(
             command.extend([
                 "--gender", smpl_gender
             ])
-        print(command)
+        print(f"[dreamhoi] Running SMPL with command: {command}")
         subprocess.run(command, check=True, cwd=SMPLIFY_PATH)
     
     return smpl_mesh_out_path, smpl_param_out_path
 
 def run_full(
     num_iterations, tag, prompt, prompt_human, negative_prompt, negative_prompt_human,
-    mesh_path, mesh_translation, mesh_scale, mesh_rotation_deg, mesh_tilt_deg,
+    mesh_path, mesh_normalize, mesh_translation, mesh_scale, mesh_rotation_deg, mesh_tilt_deg,
     checkpoint_interval, use_wandb, nerf_init_args, nerf_refit_args,
     smpl_variant, smpl_texture, smpl_shape, smpl_gender, openpose_dir, openpose_bin
 ):
     print("[dreamhoi] Running NeRF initialization")
     experiment_name = run_nerf(
         tag=f"{tag}_0", prompt=prompt, prompt_human=prompt_human, negative_prompt=negative_prompt, negative_prompt_human=negative_prompt_human,
-        mesh_path=mesh_path, mesh_translation=mesh_translation, mesh_scale=mesh_scale, mesh_rotation_deg=mesh_rotation_deg, mesh_tilt_deg=mesh_tilt_deg,
+        mesh_path=mesh_path, mesh_normalize=mesh_normalize, mesh_translation=mesh_translation, mesh_scale=mesh_scale, mesh_rotation_deg=mesh_rotation_deg, mesh_tilt_deg=mesh_tilt_deg,
         checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, args=nerf_init_args,
         initialization=True
     )
@@ -194,7 +202,7 @@ def run_full(
         print(f"[dreamhoi] Running NeRF re-fitting iteration {i}")
         experiment_name = run_nerf(
             tag=f"{tag}_{i + 1}", prompt=prompt, prompt_human=prompt_human, negative_prompt=negative_prompt, negative_prompt_human=negative_prompt_human,
-            mesh_path=mesh_path, mesh_translation=mesh_translation, mesh_scale=mesh_scale, mesh_rotation_deg=mesh_rotation_deg, mesh_tilt_deg=mesh_tilt_deg,
+            mesh_path=mesh_path, mesh_normalize=mesh_normalize, mesh_translation=mesh_translation, mesh_scale=mesh_scale, mesh_rotation_deg=mesh_rotation_deg, mesh_tilt_deg=mesh_tilt_deg,
             checkpoint_interval=checkpoint_interval, use_wandb=use_wandb, args=nerf_refit_args,
             initialization=False, smpl_mesh_path=smpl_mesh_path,
         )
@@ -214,7 +222,8 @@ if __name__ == "__main__":
     parser.add_argument("--negative_prompt", type=str, default="missing limbs, missing legs, missing arms", help="Negative prompt for the HOI")
     parser.add_argument("--negative_prompt_human", type=str, default="missing limbs, missing legs, missing arms", help="Negative prompt for the human-only render (e.g. ball, missing limbs, missing legs, missing arms)")
     parser.add_argument("--mesh_path", type=str, required=True, help="Path to object mesh (e.g. /path/to/ball.obj)")
-    parser.add_argument("--mesh_translation", type=str, default="[0,0,0]", help="Translate the object mesh (+x is front, +z is up)")
+    parser.add_argument("--mesh_normalize", action="store_true", help="Normalize the mesh scale so it is approximately unit size")
+    parser.add_argument("--mesh_translation", type=float, nargs=3, default=[0., 0., 0.], help="Translate the object mesh (+x is front, +z is up)")
     parser.add_argument("--mesh_scale", type=float, default=0.5, help="Scale the object mesh size by a constant")
     parser.add_argument("--mesh_rotation_deg", type=float, default=0., help="Rotate the object mesh (counterclockwise viewing from above)")
     parser.add_argument("--mesh_tilt_deg", type=float, default=0., help="Tilt the object mesh")
@@ -222,17 +231,24 @@ if __name__ == "__main__":
     parser.add_argument("--use_wandb", action="store_true", help="Use weights & biases (recommended)")
     parser.add_argument("--openpose_dir", type=str, required=True, help="Path to OpenPose project directory")
     parser.add_argument("--openpose_bin", type=str, default=None, help="Path to OpenPose binary (/path/to/openpose.bin). Default is {openpose_dir}/build/examples/openpose/openpose.bin")
-    parser.add_argument("--nerf_init_args", nargs="*", help="Extra threestudio arguments for NeRF initialization")
-    parser.add_argument("--nerf_refit_args", nargs="*", help="Extra threestudio arguments for NeRF re-fitting")
+    parser.add_argument("--nerf_init_args", type=str, nargs="*", default=None, help="Extra threestudio arguments for NeRF initialization")
+    parser.add_argument("--nerf_refit_args", type=str, nargs="*", default=None, help="Extra threestudio arguments for NeRF re-fitting")
 
     args = parser.parse_args()
+
     smpl_mesh_path, smpl_param_path = run_full(
         num_iterations=args.num_iterations, tag=args.tag, prompt=args.prompt, prompt_human=args.prompt_human, negative_prompt=args.negative_prompt, negative_prompt_human=args.negative_prompt_human,
-        mesh_path=args.mesh_path, mesh_translation=args.mesh_translation, mesh_scale=args.mesh_scale, mesh_rotation_deg=args.mesh_rotation_deg, mesh_tilt_deg=args.mesh_tilt_deg,
+        mesh_path=args.mesh_path, mesh_normalize=args.mesh_normalize, mesh_translation=args.mesh_translation, mesh_scale=args.mesh_scale, mesh_rotation_deg=args.mesh_rotation_deg, mesh_tilt_deg=args.mesh_tilt_deg,
         checkpoint_interval=args.checkpoint_interval, use_wandb=args.use_wandb, nerf_init_args=args.nerf_init_args, nerf_refit_args=args.nerf_refit_args,
         smpl_variant=args.smpl_variant, smpl_texture=args.smpl_texture, smpl_shape=args.smpl_shape, smpl_gender=args.smpl_gender,
         openpose_dir=args.openpose_dir, openpose_bin=args.openpose_bin
     )
-    print(f"[dreamhoi] Run finished.")
+    print(f"[dreamhoi] Run finished")
     print(f"  Resulting human mesh: {smpl_mesh_path}")
     print(f"  Resulting SMPL parameters: {smpl_param_path}")
+    
+    from export_mesh import mesh_from_path
+    object_mesh = mesh_from_path(file_path=args.mesh_path, y_up=True, normalize=args.mesh_normalize, scale=args.mesh_scale, rotation_deg=args.mesh_rotation_deg, tilt_deg=args.mesh_tilt_deg, translation=args.translation)
+    object_mesh_out_path = os.path.join(os.path.dirname(smpl_mesh_path), "object_mesh.obj")
+    object_mesh.export(object_mesh_out_path)
+    print(f"  Given object mesh: {object_mesh_out_path}")
