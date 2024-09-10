@@ -61,7 +61,13 @@ where:
 * `openpose_bin` is the path to the OpenPose built binary file (default is `{openpose_dir}/build/examples/openpose/openpose.bin`)
 * `nerf_init_args`, `nerf_refit_args` are optional additional settings for NeRF fitting (see below)
 
-[`main.py`](main.py) is a wrapper around our pipeline, and you can modify our pipeline by directly modifying it. The output will typically be in `dreamhoi/smplify/smpl-with-mesh-nerf-if/{tag}_{num_iterations}`.
+[`main.py`](main.py) is a wrapper around our pipeline, and you can modify our pipeline by directly modifying it.
+
+After running, DreamHOI outputs:
+* The SMPL pose parameters of the generated human $\xi$
+* The generated human mesh $M_\xi$
+* The (transformed) mesh of the given object $M_{\text{obj}}$
+The output will typically be in `dreamhoi/smplify/smpl-with-mesh-nerf-if/{tag}_{num_iterations}`. (Note that as in threestudio, the generated meshes are Z-up, and you can transform back to Y-up by a -π/2 rotation about the X axis)
 
 ##### Extra configurations
 You may also add
