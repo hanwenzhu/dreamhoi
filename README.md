@@ -67,7 +67,8 @@ After running, DreamHOI outputs:
 * The SMPL pose parameters of the generated human $\xi$
 * The generated human mesh $M_\xi$
 * The (transformed) mesh of the given object $M_{\text{obj}}$
-The output will typically be in `dreamhoi/smplify/smpl-with-mesh-nerf-if/{tag}_{num_iterations}`. (Note that as in threestudio, the generated meshes are Z-up, and you can transform back to Y-up by a -π/2 rotation about the X axis)
+
+Note that as in threestudio, the generated meshes are Z-up, and you can transform back to Y-up by a -π/2 rotation about the X axis.
 
 ##### Extra configurations
 You may also add
