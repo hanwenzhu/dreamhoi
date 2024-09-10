@@ -179,7 +179,7 @@ def predict_smpl(
             command.extend([
                 "--gender", smpl_gender
             ])
-        print(f"[dreamhoi] Running SMPL with command: {command}")
+        print(f"[dreamhoi] Running SMPLify with command: {command}")
         subprocess.run(command, check=True, cwd=SMPLIFY_PATH)
     
     return smpl_mesh_out_path, smpl_param_out_path
