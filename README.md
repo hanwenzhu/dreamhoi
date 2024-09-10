@@ -40,7 +40,7 @@ python main.py \
 ```
 where:
 * `num_iterations` is the number of times to reinitiate NeRF (≥ 0)
-* `tag` is a unique name for this run (used for naming files)
+* `tag` is a unique name for this run, used for naming files. This also supports resuming from an interrupted run
 * `smpl_texture` is the texture of SMPL for the generation, in .png (see [examples](https://dancasas.github.io/projects/SMPLitex/SMPLitex-dataset.html)). If not provided, we output pose parameters (bone rotations) without generating the final human mesh.
 * `smpl_shape` is an .npy containing a (10,) array of SMPL shape parameters. Default is to predict shape by SMPLify
 * `smpl_gender` is gender for SMPL models to use (male, female, or neutral). Note SMPL+H does not support neutral (see src/MultiviewSMPLifyX/cfg_files/ for defaults)
@@ -49,7 +49,7 @@ where:
 * `prompt_human` is a prompt for supervising the human part
 * `negative_prompt` is a negative prompt for supervising the overall HOI
 * `negative_prompt_human` is a negative prompt for supervising the human part
-* `mesh_path` is path to the mesh of the object (in a mesh format such as .obj, .glb)
+* `mesh_path` is path to the mesh of the object (in a mesh format such as .obj, .glb). Note that we assume the mesh is Y-up, X-front
 * `mesh_normalize` if set, normalize the mesh scale so it is approximately unit size
 * `mesh_translation` is where to position the object in the scene in x, y, z (+x is front, +z is up)
 * `mesh_scale` is a scalar to scale of the object mesh (0.2–0.4 is used in the paper)
@@ -97,19 +97,33 @@ You may also add
 * For both of the above see [threestudio docs](https://github.com/threestudio-project/threestudio/blob/main/DOCUMENTATION.md) for a more complete set of options, and our config YAML [for NeRF initialization](src/MVDream-threestudio/configs/mvdream-with-deepfloyd-with-mesh.yaml) and [for NeRF refitting](src/MVDream-threestudio/configs/smpl-with-mesh-nerf-if.yaml) for default values.
 * Note `system.composed_only` is by default true for NeRF re-fitting, i.e. MVDream is disabled (as discussed in paper). If you want to use MVDream guidance, you need to modify the [config](src/MVDream-threestudio/configs/smpl-with-mesh-nerf-if.yaml) and use `random-multiview-camera-datamodule` for `data_type`, setting parameters under `data` as in the [initialization config](src/MVDream-threestudio/configs/mvdream-with-deepfloyd-with-mesh.yaml).
 
-## Tricks
-1. Tune hyperparams
-    1. IF/MV ratios
-    2. individual time steps
-    3. Loss lambdas - sometimes disabling some losses works better
-    4. Tune mesh position & rotation (make sure face front)
-    5. Learning rate (maybe not so important)
-    6. Background (random aug, eval color -> openpose)
-2. Prompting
-    1. Increase guidance_scale
-    2. Make prompt more specific (limb positions etc, IF understands very specific prompts; describe mesh accurately so doesn't make new object)
-    3. Negative prompting
-3. 
+## Tips to improve generation
+* Tune hyperparams:
+  * The mixture ratio between DeepFloyd IF and MVDream
+    * Parameter names: `--nerf_*_args system.loss.lambda_*_sds` (see above)
+    * The difference between DeepFloyd IF and MVDream guidance are discussed in the paper. On a high level, DeepFloyd IF has a much better understanding of text, while MVDream is good at multi-view consistent, detailed 3D generation.
+  * Noise levels of each guidance
+    * Parameter names: `--nerf_*_args system.(composed_)guidance.max_step_percent` (see above)
+    * This parameter controls the upper bound *t* for noise levels, which are sampled from [0.02, *t*] uniformly. A higher value allows the guidance model to edit high-level features (e.g., changing semantic relation) and a lower value allows the guidance model to edit lower-level details. It may also be beneficial to set different values for DeepFloyd IF and MVDream.
+  * Guidance scale
+    * Parameter names: `--nerf_*_args system.(composed_)guidance.guidance_scale` (see above)
+    * Increasing the guidance scale (default 50) significantly helps guidance models to follow the text prompt more
+  * Regularizer weights
+    * Parameter names: `--nerf_*_args system.loss.lambda_*` (see above)
+    * The different losses and regularizers are extensively discussed in the paper.
+    * Note that sometimes setting these weights to 0, i.e. disabling some regularizers, may work better.
+  * Tuning mesh position
+    * Parameters names: `--mesh_*` (see above)
+    * Make sure the mesh faces the front (+x) to make MVDream guidance work better
+* Prompting
+    * Make the prompts more specific
+      * Describe mesh accurately (e.g. "vintage tv" instead of "tv") to avoid the NeRF from generating a new object
+      * You may describe the semantic relation between the human and the object very specifically ("A person sitting on a ball. Her upper body sits on top of the ball, her elbows rest on her knees, and her feet rest on the floor.") though we are not sure of its effects
+    * Negative prompts also help in producing a good human NeRF.
+      * Negative prompts like "missing limbs" ensures the model produces an entire human NeRF (not just parts) so the pose estimation stage is much easier
+*	Other less important parameters
+  * Traning parameters like learning rate, batch size, number of iterations (see above)
+  * Background color `--nerf_*_args system.background.*` (see above)
 
 ## License
 DreamHOI is released under MIT License. Some parts of this project uses third-party software. See [LICENSE](LICENSE) for their respective notices and licenses.
