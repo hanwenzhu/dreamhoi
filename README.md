@@ -1,19 +1,23 @@
-# DreamHOI
+# DreamHOI: Subject-Driven Generation of 3D Human-Object Interactions with Diffusion Priors
 
+[**Website**](https://dreamhoi.github.io/)
+| [**Paper**](TODO)
+
+[Thomas Zhu](https://thomaszhu.cn), [Ruining Li](https://ruiningli.com/)\*, [Tomas Jakab](https://www.robots.ox.ac.uk/~tomj)\*
+<sub>(\*equal advising)</sub>
+<br>Visual Geometry Group, University of Oxford
+
+![Teaser figure](assets/teaser.jpg)
 We present DreamHOI, a novel method for zero-shot synthesis of human-object interactions (HOIs), enabling a 3D human model to realistically interact with any given object based on a textual description.
-
-[Website](https://dreamhoi.github.io/)
-[Paper](TODO)
 
 ## Installation
 
-Please carefully follow [installation.md](docs/installation.md) to set up your system for DreamHOI.
+Please carefully follow [docs/installation.md](docs/installation.md) to set up your system for DreamHOI.
 
 ## Running
 
 To run our pipeline, run
 ```sh
-# inside dreamhoi
 python main.py \
   --num_iterations 1 \
   --tag sit-ball \
@@ -148,7 +152,7 @@ DreamHOI is released under MIT License. Some parts of this project uses third-pa
 ## Citation
 ```bibtex
 @article{zhu2024dreamhoi,
-  title   = {DreamHOI: Subject-Driven Generation of 3D Human-Object Interactions with Diffusion Priors},
+  title   = {{DreamHOI}: Subject-Driven Generation of 3D Human-Object Interactions with Diffusion Priors},
   author  = {Zhu, Hanwen and Li, Ruining and Jakab, Tomas},
   journal = {arXiv preprint arXiv:{ID}},
   year    = {2024}
