@@ -1,7 +1,7 @@
 # DreamHOI: Subject-Driven Generation of 3D Human-Object Interactions with Diffusion Priors
 
 [**Website**](https://dreamhoi.github.io/)
-| [**Paper**](TODO)
+| [**Paper**](https://arxiv.org/abs/2409.08278)
 
 [Thomas Zhu](https://thomaszhu.cn), [Ruining Li](https://ruiningli.com/)\*, [Tomas Jakab](https://www.robots.ox.ac.uk/~tomj)\*
 <sub>(\*equal advising)</sub>
@@ -153,8 +153,8 @@ DreamHOI is released under MIT License. Some parts of this project uses third-pa
 ```bibtex
 @article{zhu2024dreamhoi,
   title   = {{DreamHOI}: Subject-Driven Generation of 3D Human-Object Interactions with Diffusion Priors},
-  author  = {Zhu, Hanwen and Li, Ruining and Jakab, Tomas},
-  journal = {arXiv preprint arXiv:{ID}},
+  author  = {Thomas Hanwen Zhu and Ruining Li and Tomas Jakab},
+  journal = {arXiv preprint arXiv:2409.08278},
   year    = {2024}
 }
 ```
