@@ -154,10 +154,12 @@ def predict_smpl(
     force_symlink(keypoints_dir, os.path.join(data_dir, "keypoints"))
     force_symlink(metadata_dir, os.path.join(data_dir, "meta"))
 
-    smpl_mesh_out_path = os.path.join(out_dir, "smpl_mesh.obj")
-    smpl_param_out_path = os.path.join(out_dir, "smpl_param.pkl")
-    if os.path.isfile(smpl_mesh_out_path):
-        print("[dreamhoi] Output mesh exists; skipping SMPLifyX stage")
+    smpl_mesh_out_path = Path(out_dir) / "smpl_mesh.obj"
+    smpl_param_out_path = Path(out_dir) / "smpl_param.pkl"
+
+    if smpl_mesh_out_path.is_file():
+    logger.info("Output mesh exists; skipping SMPLifyX stage")
+
     else:
         # Run SMPLifyX
         print("[dreamhoi] Running SMPLify-X")
